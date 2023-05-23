@@ -4,9 +4,16 @@ import os
 import random
 import csv
 import button
+from linear_congruential import LinearCongruential
+from middle_square import MiddleSquare
+from multiplicative_congruential import MultiplicativeCongruential
 
 mixer.init()
 pygame.init()
+
+linearCongruential = LinearCongruential()
+middleSquare = MiddleSquare()
+multiplicativeCongruential = MultiplicativeCongruential()
 
 
 SCREEN_WIDTH = 800
@@ -43,7 +50,7 @@ grenade_thrown = False
 
 
 # load music and sounds
-pygame.mixer.music.load('audio/music2.mp3')
+pygame.mixer.music.load("audio/music2.mp3")
 pygame.mixer.music.set_volume(0.3)
 pygame.mixer.music.play(-1, 0.0, 5000)
 jump_fx = pygame.mixer.Sound("audio/jump.wav")
@@ -107,7 +114,7 @@ def draw_bg():
     screen.fill(BG)
     width = sky_img.get_width()
     for x in range(5):
-        screen.blit(sky_img, ((x * width-100) - bg_scroll * 0.5, 0))
+        screen.blit(sky_img, ((x * width - 100) - bg_scroll * 0.5, 0))
         screen.blit(
             mountain_img,
             (
@@ -141,7 +148,6 @@ def draw_bg():
                 SCREEN_HEIGHT - pine3_img.get_height() - 200,
             ),
         )
-        
 
 
 # function to reset level
@@ -180,7 +186,7 @@ class Soldier(pygame.sprite.Sprite):
         self.vel_y = 0
         self.jump = False
         self.in_air = True
-        self.shooting = False;
+        self.shooting = False
         self.flip = False
         self.animation_list = []
         self.frame_index = 0
@@ -188,12 +194,14 @@ class Soldier(pygame.sprite.Sprite):
         self.update_time = pygame.time.get_ticks()
         # ai specific variables
         self.move_counter = 0
-        self.vision = pygame.Rect(0, 0, 150, 20)
+        self.vision = pygame.Rect(
+            0, 0, multiplicativeCongruential.generate_number(120, 170), 20
+        )
         self.idling = False
         self.idling_counter = 0
 
         # load all images for the players
-        animation_types = ["Idle", "Run", "Jump","Shoot", "Death"]
+        animation_types = ["Idle", "Run", "Jump", "Shoot", "Death"]
         for animation in animation_types:
             # reset temporary list of images
             temp_list = []
@@ -345,7 +353,7 @@ class Soldier(pygame.sprite.Sprite):
                     self.move_counter += 1
                     # update ai vision as the enemy moves
                     self.vision.center = (
-                        self.rect.centerx + 75 * self.direction,
+                        self.rect.centerx + (self.vision.width / 2) * self.direction,
                         self.rect.centery,
                     )
 
@@ -509,13 +517,13 @@ class ItemBox(pygame.sprite.Sprite):
         if pygame.sprite.collide_rect(self, player):
             # check what kind of box it was
             if self.item_type == "Health":
-                player.health += 25
+                player.health += middleSquare.generate_number(15, 25)
                 if player.health > player.max_health:
                     player.health = player.max_health
             elif self.item_type == "Ammo":
-                player.ammo += 15
+                player.ammo += linearCongruential.generate_number(5, 15)
             elif self.item_type == "Grenade":
-                player.grenades += 3
+                player.grenades += linearCongruential.generate_number(1, 3)
             # delete the item box
             self.kill()
 
@@ -819,7 +827,7 @@ while run:
         if player.alive:
             # shoot bullets
             if shoot:
-                player.shooting = True;
+                player.shooting = True
                 player.shoot()
             # throw grenades
             elif grenade and grenade_thrown == False and player.grenades > 0:
@@ -903,7 +911,7 @@ while run:
                 moving_right = False
             if event.key == pygame.K_SPACE:
                 shoot = False
-                player.shooting = False;
+                player.shooting = False
             if event.key == pygame.K_q:
                 grenade = False
                 grenade_thrown = False

@@ -12,10 +12,9 @@ class LinearCongruential:
         # Generate initial seed based on current time
         self.seed = int(time.time()) % self.modulus
 
-    def generate_number(self):
+    def generate_number(self, minimum, maximum):
         # Update seed using congruential formula
         self.seed = (self.multiplier * self.seed + self.increment) % self.modulus
-        # Scale the generated number to the range of 0 to 1
-        decimal = self.seed / self.modulus
-        # Return the pseudo-random number as a decimal between 0 and 1
-        return decimal
+        # Calculate the range of values based on the given minimum and maximum
+        pseudo_random_number = minimum + (self.seed % (maximum - minimum + 1))
+        return pseudo_random_number
