@@ -4,16 +4,23 @@ import os
 import random
 import csv
 import button
+from linear_congruential import LinearCongruential
+from middle_square import MiddleSquare
+from multiplicative_congruential import MultiplicativeCongruential
 
 mixer.init()
 pygame.init()
+
+linearCongruential = LinearCongruential()
+middleSquare = MiddleSquare()
+multiplicativeCongruential = MultiplicativeCongruential()
 
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Shooter")
+pygame.display.set_caption("Elite Soldier")
 
 # set framerate
 clock = pygame.time.Clock()
@@ -43,9 +50,9 @@ grenade_thrown = False
 
 
 # load music and sounds
-# pygame.mixer.music.load('audio/music2.mp3')
-# pygame.mixer.music.set_volume(0.3)
-# pygame.mixer.music.play(-1, 0.0, 5000)
+pygame.mixer.music.load("audio/music2.mp3")
+pygame.mixer.music.set_volume(0.3)
+pygame.mixer.music.play(-1, 0.0, 5000)
 jump_fx = pygame.mixer.Sound("audio/jump.wav")
 jump_fx.set_volume(0.05)
 shot_fx = pygame.mixer.Sound("audio/shot.wav")
@@ -60,8 +67,9 @@ start_img = pygame.image.load("img/start_btn.png").convert_alpha()
 exit_img = pygame.image.load("img/exit_btn.png").convert_alpha()
 restart_img = pygame.image.load("img/restart_btn.png").convert_alpha()
 # background
-pine1_img = pygame.image.load("img/Background/pine1.png").convert_alpha()
-pine2_img = pygame.image.load("img/Background/pine2.png").convert_alpha()
+pine1_img = pygame.image.load("img/Background/pine3.png").convert_alpha()
+pine2_img = pygame.image.load("img/Background/river.png").convert_alpha()
+pine3_img = pygame.image.load("img/Background/pine2.png").convert_alpha()
 mountain_img = pygame.image.load("img/Background/mountain.png").convert_alpha()
 sky_img = pygame.image.load("img/Background/sky_cloud.png").convert_alpha()
 # store tiles in a list
@@ -106,24 +114,39 @@ def draw_bg():
     screen.fill(BG)
     width = sky_img.get_width()
     for x in range(5):
-        screen.blit(sky_img, ((x * width) - bg_scroll * 0.5, 0))
+        screen.blit(sky_img, ((x * width - 100) - bg_scroll * 0.5, 0))
         screen.blit(
             mountain_img,
             (
-                (x * width) - bg_scroll * 0.6,
-                SCREEN_HEIGHT - mountain_img.get_height() - 300,
+                (x * width) - bg_scroll * 0.7,
+                SCREEN_HEIGHT - mountain_img.get_height() - 270,
             ),
         )
         screen.blit(
-            pine1_img,
+            mountain_img,
             (
                 (x * width) - bg_scroll * 0.7,
-                SCREEN_HEIGHT - pine1_img.get_height() - 150,
+                SCREEN_HEIGHT - mountain_img.get_height() - 185,
+            ),
+        )
+
+        screen.blit(
+            pine3_img,
+            (
+                (x * width) - bg_scroll * 0.7,
+                SCREEN_HEIGHT - pine3_img.get_height() - 300,
             ),
         )
         screen.blit(
             pine2_img,
-            ((x * width) - bg_scroll * 0.8, SCREEN_HEIGHT - pine2_img.get_height()),
+            ((x * width) - bg_scroll * 0.7, SCREEN_HEIGHT - 300),
+        )
+        screen.blit(
+            pine3_img,
+            (
+                (x * width) - bg_scroll * 0.9,
+                SCREEN_HEIGHT - pine3_img.get_height() - 200,
+            ),
         )
 
 
@@ -163,6 +186,7 @@ class Soldier(pygame.sprite.Sprite):
         self.vel_y = 0
         self.jump = False
         self.in_air = True
+        self.shooting = False
         self.flip = False
         self.animation_list = []
         self.frame_index = 0
@@ -170,12 +194,14 @@ class Soldier(pygame.sprite.Sprite):
         self.update_time = pygame.time.get_ticks()
         # ai specific variables
         self.move_counter = 0
-        self.vision = pygame.Rect(0, 0, 150, 20)
+        self.vision = pygame.Rect(
+            0, 0, multiplicativeCongruential.generate_number(120, 170), 20
+        )
         self.idling = False
         self.idling_counter = 0
 
         # load all images for the players
-        animation_types = ["Idle", "Run", "Jump", "Death"]
+        animation_types = ["Idle", "Run", "Jump", "Shoot", "Death"]
         for animation in animation_types:
             # reset temporary list of images
             temp_list = []
@@ -327,7 +353,7 @@ class Soldier(pygame.sprite.Sprite):
                     self.move_counter += 1
                     # update ai vision as the enemy moves
                     self.vision.center = (
-                        self.rect.centerx + 75 * self.direction,
+                        self.rect.centerx + (self.vision.width / 2) * self.direction,
                         self.rect.centery,
                     )
 
@@ -353,7 +379,7 @@ class Soldier(pygame.sprite.Sprite):
             self.frame_index += 1
         # if the animation has run out the reset back to the start
         if self.frame_index >= len(self.animation_list[self.action]):
-            if self.action == 3:
+            if self.action == 4:
                 self.frame_index = len(self.animation_list[self.action]) - 1
             else:
                 self.frame_index = 0
@@ -371,7 +397,7 @@ class Soldier(pygame.sprite.Sprite):
             self.health = 0
             self.speed = 0
             self.alive = False
-            self.update_action(3)
+            self.update_action(4)
 
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
@@ -402,7 +428,7 @@ class World:
                         decoration_group.add(decoration)
                     elif tile == 15:  # create player
                         player = Soldier(
-                            "player", x * TILE_SIZE, y * TILE_SIZE, 1.65, 5, 20, 5
+                            "player", x * TILE_SIZE, y * TILE_SIZE, 2.2, 5, 20, 5
                         )
                         health_bar = HealthBar(10, 10, player.health, player.health)
                     elif tile == 16:  # create enemies
@@ -491,13 +517,13 @@ class ItemBox(pygame.sprite.Sprite):
         if pygame.sprite.collide_rect(self, player):
             # check what kind of box it was
             if self.item_type == "Health":
-                player.health += 25
+                player.health += middleSquare.generate_number(15, 25)
                 if player.health > player.max_health:
                     player.health = player.max_health
             elif self.item_type == "Ammo":
-                player.ammo += 15
+                player.ammo += linearCongruential.generate_number(5, 15)
             elif self.item_type == "Grenade":
-                player.grenades += 3
+                player.grenades += linearCongruential.generate_number(1, 3)
             # delete the item box
             self.kill()
 
@@ -801,6 +827,7 @@ while run:
         if player.alive:
             # shoot bullets
             if shoot:
+                player.shooting = True
                 player.shoot()
             # throw grenades
             elif grenade and grenade_thrown == False and player.grenades > 0:
@@ -816,6 +843,8 @@ while run:
                 grenade_thrown = True
             if player.in_air:
                 player.update_action(2)  # 2: jump
+            elif player.shooting:
+                player.update_action(3)  # 3: Shoot
             elif moving_left or moving_right:
                 player.update_action(1)  # 1: run
             else:
@@ -882,6 +911,7 @@ while run:
                 moving_right = False
             if event.key == pygame.K_SPACE:
                 shoot = False
+                player.shooting = False
             if event.key == pygame.K_q:
                 grenade = False
                 grenade_thrown = False
