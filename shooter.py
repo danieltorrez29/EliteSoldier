@@ -88,7 +88,8 @@ grenade_img = pygame.image.load("img/icons/grenade.png").convert_alpha()
 # Pick up boxes
 health_box_img = pygame.image.load("img/icons/health_box.png").convert_alpha()
 ammo_box_img = pygame.image.load("img/icons/ammo_box.png").convert_alpha()
-grenade_box_img = pygame.image.load("img/icons/grenade_box.png").convert_alpha()
+grenade_box_img = pygame.image.load(
+    "img/icons/grenade_box.png").convert_alpha()
 item_boxes = {
     "Health": health_box_img,
     "Ammo": ammo_box_img,
@@ -239,13 +240,15 @@ class Soldier(pygame.sprite.Sprite):
             # Reset temporary list of images
             temp_list = []
             # Count number of files in the folder
-            num_of_frames = len(os.listdir(f"img/{self.char_type}/{animation}"))
+            num_of_frames = len(os.listdir(
+                f"img/{self.char_type}/{animation}"))
             for i in range(num_of_frames):
                 img = pygame.image.load(
                     f"img/{self.char_type}/{animation}/{i}.png"
                 ).convert_alpha()
                 img = pygame.transform.scale(
-                    img, (int(img.get_width() * scale), int(img.get_height() * scale))
+                    img, (int(img.get_width() * scale),
+                          int(img.get_height() * scale))
                 )
                 temp_list.append(img)
             self.animation_list.append(temp_list)
@@ -367,7 +370,8 @@ class Soldier(pygame.sprite.Sprite):
         if self.shoot_cooldown == 0 and self.ammo > 0:
             self.shoot_cooldown = 20
             bullet = Bullet(
-                self.rect.centerx + (0.75 * self.rect.size[0] * self.direction),
+                self.rect.centerx +
+                (0.75 * self.rect.size[0] * self.direction),
                 self.rect.centery,
                 self.direction,
             )
@@ -401,7 +405,8 @@ class Soldier(pygame.sprite.Sprite):
                     self.move_counter += 1
                     # Update ai vision as the enemy moves
                     self.vision.center = (
-                        self.rect.centerx + (self.vision.width / 2) * self.direction,
+                        self.rect.centerx +
+                        (self.vision.width / 2) * self.direction,
                         self.rect.centery,
                     )
 
@@ -455,7 +460,8 @@ class Soldier(pygame.sprite.Sprite):
 
     def draw(self):
         """Draw soldier onto screen"""
-        screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
+        screen.blit(pygame.transform.flip(
+            self.image, self.flip, False), self.rect)
 
 
 class World:
@@ -490,26 +496,31 @@ class World:
                         water = Water(img, x * TILE_SIZE, y * TILE_SIZE)
                         water_group.add(water)
                     elif tile >= 11 and tile <= 14:
-                        decoration = Decoration(img, x * TILE_SIZE, y * TILE_SIZE)
+                        decoration = Decoration(
+                            img, x * TILE_SIZE, y * TILE_SIZE)
                         decoration_group.add(decoration)
                     elif tile == 15:  # Create player
                         player = Soldier(
                             "player", x * TILE_SIZE, y * TILE_SIZE, 2.2, 5, 20, 5
                         )
-                        health_bar = HealthBar(10, 10, player.health, player.health)
+                        health_bar = HealthBar(
+                            10, 10, player.health, player.health)
                     elif tile == 16:  # Create enemies
                         enemy = Soldier(
                             "enemy", x * TILE_SIZE, y * TILE_SIZE, 1.65, 2, 20, 0
                         )
                         enemy_group.add(enemy)
                     elif tile == 17:  # Create ammo box
-                        item_box = ItemBox("Ammo", x * TILE_SIZE, y * TILE_SIZE)
+                        item_box = ItemBox(
+                            "Ammo", x * TILE_SIZE, y * TILE_SIZE)
                         item_box_group.add(item_box)
                     elif tile == 18:  # Create grenade box
-                        item_box = ItemBox("Grenade", x * TILE_SIZE, y * TILE_SIZE)
+                        item_box = ItemBox(
+                            "Grenade", x * TILE_SIZE, y * TILE_SIZE)
                         item_box_group.add(item_box)
                     elif tile == 19:  # Create health box
-                        item_box = ItemBox("Health", x * TILE_SIZE, y * TILE_SIZE)
+                        item_box = ItemBox(
+                            "Health", x * TILE_SIZE, y * TILE_SIZE)
                         item_box_group.add(item_box)
                     elif tile == 20:  # Create exit
                         exit = Exit(img, x * TILE_SIZE, y * TILE_SIZE)
@@ -822,9 +833,11 @@ class Explosion(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.images = []
         for num in range(1, 6):
-            img = pygame.image.load(f"img/explosion/exp{num}.png").convert_alpha()
+            img = pygame.image.load(
+                f"img/explosion/exp{num}.png").convert_alpha()
             img = pygame.transform.scale(
-                img, (int(img.get_width() * scale), int(img.get_height() * scale))
+                img, (int(img.get_width() * scale),
+                      int(img.get_height() * scale))
             )
             self.images.append(img)
         self.frame_index = 0
@@ -871,7 +884,8 @@ class ScreenFade:
             pygame.draw.rect(
                 screen,
                 self.colour,
-                (SCREEN_WIDTH // 2 + self.fade_counter, 0, SCREEN_WIDTH, SCREEN_HEIGHT),
+                (SCREEN_WIDTH // 2 + self.fade_counter,
+                 0, SCREEN_WIDTH, SCREEN_HEIGHT),
             )
             pygame.draw.rect(
                 screen,
@@ -890,7 +904,8 @@ class ScreenFade:
             )
         if self.direction == 2:  # Vertical screen fade down
             pygame.draw.rect(
-                screen, self.colour, (0, 0, SCREEN_WIDTH, 0 + self.fade_counter)
+                screen, self.colour, (0, 0, SCREEN_WIDTH,
+                                      0 + self.fade_counter)
             )
         if self.fade_counter >= SCREEN_WIDTH:
             fade_complete = True
@@ -1025,7 +1040,8 @@ while run:
                 player.update_action(1)  # 1: Run
             else:
                 player.update_action(0)  # 0: Idle
-            screen_scroll, level_complete = player.move(moving_left, moving_right)
+            screen_scroll, level_complete = player.move(
+                moving_left, moving_right)
             bg_scroll -= screen_scroll
             # Check if player has completed the level
             if level_complete:
